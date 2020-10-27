@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TabuVRP002", "TabuVRP002\TabuVRP002.csproj", "{EF18CC8D-D752-443A-975C-F8A53462C015}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EF18CC8D-D752-443A-975C-F8A53462C015}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF18CC8D-D752-443A-975C-F8A53462C015}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF18CC8D-D752-443A-975C-F8A53462C015}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF18CC8D-D752-443A-975C-F8A53462C015}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D0AFA3CE-D9BD-49FA-A9B1-5659D6D8C21E}
+	EndGlobalSection
+EndGlobal
