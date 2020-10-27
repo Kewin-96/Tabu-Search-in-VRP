@@ -10,23 +10,23 @@ using System.Windows.Shapes;
 
 namespace TabuVRP002
 {
-    public static class DrawX
+    public static class DrawX   // Graphical representation /// Reprezentacja graficzna
     {
         public static Grid mainGrid;
-        public static int clientsCount;
-        public static List<List<Line>> tracksLines = new List<List<Line>>();    // linie (grafika) pokazujące trasy
-        public static Ellipse[] clientsCircles = new Ellipse[0];     //okręgi (grafika) pokazujące klientów/punkty dostaw
+        public static int clientsCount; // Clients Count /// Liczba klientów
+        public static List<List<Line>> tracksLines = new List<List<Line>>();    // Track lines /// Linie pokazujące trasy
+        public static Ellipse[] clientsCircles = new Ellipse[0];     // Clients (circles) /// Klienci (koła)
         public static Brush[] colors = { Brushes.Red, Brushes.Orange, Brushes.Yellow, Brushes.Green, Brushes.Cyan, Brushes.Blue, Brushes.Purple, Brushes.Brown, Brushes.Gray, Brushes.Black };
-        public static int thickness = 3;
-        public static Point main_station;
+        public static int thickness = 3;    // Lines thickness /// Grubość linii
+        public static Point main_station;   // Main station (shipping point) /// Główna stacja (Punkt wysyłkowy)
         public static Ellipse main_station_ellipse;
 
-        public static void sendData(Grid grid, int clientsCountx)
+        public static void SendData(Grid grid, int clientsCountx)
         {
             mainGrid = grid;
             clientsCount = clientsCountx;
         }
-        public static void drawMainStation(Point ms)   //rysowanie głównej stacji
+        public static void DrawMainStation(Point ms)   // Drawing main station /// Rysowanie głównej stacji
         {
             if (main_station != null)
                 mainGrid.Children.Remove(main_station_ellipse);
@@ -41,7 +41,7 @@ namespace TabuVRP002
             main_station_ellipse.VerticalAlignment = VerticalAlignment.Top;
             mainGrid.Children.Add(main_station_ellipse);
         }
-        public static void drawClients(Point[] clients)   //rysowanie klientów / punktów dostaw
+        public static void DrawClients(Point[] clients)   // Drawing clients (delivery points) /// Rysowanie klientów (punktów dostaw)
         {
             clientsCircles = new Ellipse[clientsCount];
             for (int i = 0; i < clientsCount; i++)
@@ -57,7 +57,7 @@ namespace TabuVRP002
                 mainGrid.Children.Add(clientsCircles[i]);
             }
         }
-        public static void drawLines(List<List<Point>> tracks) //rysowanie linii
+        public static void DrawLines(List<List<Point>> tracks) // Drawing lines /// Rysowanie linii
         {
             mainGrid.Dispatcher.Invoke(() =>
             {
@@ -80,7 +80,7 @@ namespace TabuVRP002
                 }
             });
         }
-        public static void removeLines()   //usuwanie linii
+        public static void RemoveLines()   // Removing lines /// Usuwanie linii
         {
             mainGrid.Dispatcher.Invoke(() =>
             {
@@ -93,7 +93,7 @@ namespace TabuVRP002
                 }
             });
         }
-        public static void removeClients()   //usuwanie klientów (kółek)
+        public static void RemoveClients()   // Removing clients (circles) /// Usuwanie klientów (kółek)
         {
             mainGrid.Dispatcher.Invoke(() =>
             {

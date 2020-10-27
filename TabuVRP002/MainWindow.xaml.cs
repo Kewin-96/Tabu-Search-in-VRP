@@ -20,45 +20,42 @@ namespace TabuVRP002
 {
     public partial class MainWindow : Window
     {
-        //klient = punkt dostaw
-        //główna baza - miejsce, z którego wyjeżdżają dostawczaki oraz do którego wracają
-
-        //parametry
+        // Parameters /// Parametry
         public static int minMass = 3;
         public static int maxMass = 20;
         public static int clientsCount = 30;
-        public static int capacity = 50; //pojemność dostawczaka
-        public static int cadenceMod = 10; //modyfikator kadencji; kadencja = ilosc_klientów * (modyfikator_kadencji / 100)
-        public static int cadence = (int)(clientsCount * (cadenceMod / 100.0));
-        public static double percMaxTabu = 0.1; //procent zakazanych ruchów (stosunek maksymalnej ilości zakazanych ruchów do wszystkich możliwych ruchów)
+        public static int capacity = 50;
+        public static int cadenceMod = 10; // Cadence modifier /// Modyfikator kadencji
+        public static double percMaxTabu = 0.1; // Percentage of forbidden moves (ratio of the maximum number of forbidden moves to all possible moves) /// Procent zakazanych ruchów (stosunek maksymalnej ilości zakazanych ruchów do wszystkich możliwych ruchów)
         public static int aspirationPlus = 500;
         public static int aspirationPlusPlus = 5;
-        public static double aspiration = 0.9; // jesli nastąpi poprawa (1-aspiration)*100 procent to zignorowac zakaz
+        public static double aspiration = 0.9;
 
-        //wyniki parametrów
-        public static int avaMoves = ((clientsCount - 2) * (clientsCount - 3)) / 2; //ilość możliwych ruchów
-        public static int maxTabu = (int)((percMaxTabu * 0.01) * avaMoves); //maksymalna ilość zakazanych ruchów
+        // Derived parameters /// Parametry pochodne
+        public static int cadence = (int)(clientsCount * (cadenceMod / 100.0)); // Cadence length [iterations] /// Długość kadencji [w iteracjach]
+        public static int avaMoves = ((clientsCount - 2) * (clientsCount - 3)) / 2; // Number of possible moves /// Ilość możliwych ruchów
+        public static int maxTabu = (int)((percMaxTabu * 0.01) * avaMoves); // Maximum number of forbidden moves /// Maksymalna ilość zakazanych ruchów
 
-        //Losowany zbiór danych wejściowych - zbiór klientów i masy zamówień
-        public static Point[] clients; //zbiór klientów (wierzchołków)/ punktów dostaw
-        public static int[] clientsOrders; //masy zamówień
+        // Input data /// Dane wejściowe
+        public static Point[] clients; // Clients set (circles) /// Zbiór klientów (circles)
+        public static int[] clientsOrders; // Masses of orders /// Masy zamówień
 
-        //Dane wyjściowe - trasy, cykl Hamiltona będzie ukryty po prostu pod tracks[0]
-        public static List<List<Point>> tracks = new List<List<Point>>();   //trasy, każda trasa to zbiór wierzchołków - powinna zaczynać i kończyć się w bazie głównej, a za pokrewne punkty przyjmować kolejnych klientów/punkty dostaw
-        public static List<List<Point>> bestTracks = new List<List<Point>>();
-        public static double bestOfBestCost = 1e100;
-        public static double finalCost = 1e100;
+        // Output data /// Dane wyjściowe
+        public static List<List<Point>> tracks = new List<List<Point>>(); // Trakcs /// Trasy
+        public static List<List<Point>> bestTracks = new List<List<Point>>(); // Best tracks /// Najlepsze trasy
+        public static double bestOfBestCost = 1e100; // Best instantaneous cost of Hamilton cycle /// Najlepszy koszt chwilowy cyklu Hamiltona
+        public static double finalCost = 1e100; // Final cost /// Koszt finalny
 
-        //Lista Tabu
+        // Tabu list /// Lista Tabu
         public static List<int[]> tabuList = new List<int[]>();
 
-        //inne
+        // Miscellaneous /// Inne
         Random rnd = new Random();
-        Point main_station = new Point(500,500);
+        Point main_station = new Point(500, 500);
         bool windowInited = false;
         bool debug = false;
 
-        //testy parametrow:
+        // Parameters tests /// Testy parametrow:
         public static double[] percMaxTabu_T = { 0.1, 1, 10 };
         public static int[] cadenceMod_T = { 1, 10, 100 };
         public static int[] aspirationPlus_T = { 10, 100, 2000 };
@@ -72,8 +69,8 @@ namespace TabuVRP002
         {
             InitializeComponent();
             windowInited = true;
-            DrawX.sendData(mainGrid, clientsCount);
-            DrawX.drawMainStation(main_station);  //rysowanie głównej stacji
+            DrawX.SendData(mainGrid, clientsCount);
+            DrawX.DrawMainStation(main_station);
             string exePath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             try
             {
@@ -84,18 +81,18 @@ namespace TabuVRP002
                 load_Button.IsEnabled = false;
             }
         }
-        private void start()
+        private void Start()
         {
-            updateParams();
+            UpdateParams();
 
             int iteracjeBezPoprawy = aspirationPlusPlus;
             int iteracjaTotal = 1;
             bestOfBestCost = 1e100;
             finalCost = 1e100;
-            iteracja_textBlock.Dispatcher.Invoke(() => { iteracja_textBlock.Text = "0"; });
-            koszt_textBlock.Dispatcher.Invoke(() => { koszt_textBlock.Text = "0"; });
-            najlepszyKoszt_textBlock.Dispatcher.Invoke(() => { najlepszyKoszt_textBlock.Text = "0"; });
-            ostatecznyKoszt_textBlock.Dispatcher.Invoke(() => { ostatecznyKoszt_textBlock.Text = "0"; });
+            iteration_textBlock.Dispatcher.Invoke(() => { iteration_textBlock.Text = "0"; });
+            cost_textBlock.Dispatcher.Invoke(() => { cost_textBlock.Text = "0"; });
+            bestCost_textBlock.Dispatcher.Invoke(() => { bestCost_textBlock.Text = "0"; });
+            finalCost_textBlock.Dispatcher.Invoke(() => { finalCost_textBlock.Text = "0"; });
             while (iteracjeBezPoprawy > 0)
             {
                 // *** losowanie cyklu Hamiltona ***
@@ -136,7 +133,7 @@ namespace TabuVRP002
                         int bestInd = -1;
                         for (int j = 0; j < bufCliets.Count; j++)
                         {
-                            double bufD = lengthEuclid(tracks[0][i], bufCliets[j]);
+                            double bufD = LengthEuclid(tracks[0][i], bufCliets[j]);
                             if (bufD < bufbestL)
                             {
                                 bufbestL = bufD;
@@ -156,23 +153,22 @@ namespace TabuVRP002
                 double bufworstCost = 0;
                 int bufworstIndex1 = -1, bufworstIndex2 = -1;
                 int iteracja = 1;
-                iteracja_textBlock.Dispatcher.Invoke(() => { iteracja_textBlock.Text = iteracjaTotal.ToString(); });
-                double bestCost = calcHamiltonTrackLengh(tracks[0]);
-                koszt_textBlock.Dispatcher.Invoke(() => { koszt_textBlock.Text = bestCost.ToString("F3"); });
+                iteration_textBlock.Dispatcher.Invoke(() => { iteration_textBlock.Text = iteracjaTotal.ToString(); });
+                double bestCost = CalcHamiltonTrackLengh(tracks[0]);
+                cost_textBlock.Dispatcher.Invoke(() => { cost_textBlock.Text = bestCost.ToString("F3"); });
                 bool bufBreak = false, aspPlus = false;
                 int iPlus = 0;
                 bool paraTabu = false;
 
                 // *** wyliczanie pierwszego kosztu ***
-                koszt1_textBlock.Dispatcher.Invoke(() => { koszt1_textBlock.Text = bestCost.ToString("F3"); });
+                cost1_textBlock.Dispatcher.Invoke(() => { cost1_textBlock.Text = bestCost.ToString("F3"); });
 
                 // *** rysowanie wylosowanego cyklu Hamiltona ***
-                DrawX.removeLines();
-                DrawX.drawLines(tracks);
+                DrawX.RemoveLines();
+                DrawX.DrawLines(tracks);
 
                 // *** zmiana koloru kwadratu na jasny niebieski po poprzednich obliczeniach ; opóźnienie po losowaniu i przed rozpoczęciem algorytmu
                 result_Rectangle.Dispatcher.Invoke(() => { result_Rectangle.Fill = new SolidColorBrush(Color.FromArgb(0xFF, 0x71, 0x71, 0xFF)); });
-                //Thread.Sleep(500);
 
                 //DEBUG DEBUG DEBUG DEBUG DEBUG 
                 if (debug) Console.WriteLine("max ilosc Tabu listy = " + maxTabu);
@@ -205,7 +201,7 @@ namespace TabuVRP002
                                 bufBreak = true;
                                 break;
                             }
-                            buf = calcHamiltonTrackNeighLengh(tracks[0], i, j);
+                            buf = CalcHamiltonTrackNeighLengh(tracks[0], i, j);
                             paraTabu = false;
                             for (int k = 0; k < tabuList.Count; k++)
                             {
@@ -252,7 +248,6 @@ namespace TabuVRP002
                         for (int i = 0; i < tabuList.Count; i++)    // pomniejszanie kadencji o 1 i usuwanie elementow z kadencją = 0
                         {
                             tabuList[i][2] -= 1;
-                            //Console.WriteLine("Usuwanie elementu z tabu listy: (" + tabuList[i][0] + ", " + tabuList[i][1] + ")");
                             if (tabuList[i][2] == 0)
                                 tabuList.RemoveAt(i);
                         }
@@ -260,21 +255,20 @@ namespace TabuVRP002
                         {
                             int[] bufP = { bufworstIndex1, bufworstIndex2, cadence };
                             tabuList.Add(bufP);
-                            //Console.WriteLine("Dodano element do tabu listy: (" + bufP[0] + ", " + bufP[1] + ")");
                         }
                     }
 
                     // *** rysowanie cyklu Hamiltona ***
-                    DrawX.removeLines();
-                    DrawX.drawLines(tracks);
+                    DrawX.RemoveLines();
+                    DrawX.DrawLines(tracks);
 
                     // *** wyswietlanie kosztu ***
-                    koszt_textBlock.Dispatcher.Invoke(() => { koszt_textBlock.Text = bestCost.ToString("F3"); });
+                    cost_textBlock.Dispatcher.Invoke(() => { cost_textBlock.Text = bestCost.ToString("F3"); });
 
                     // *** iteracja ++ ***
                     iteracja++;
                     iteracjaTotal++;
-                    iteracja_textBlock.Dispatcher.Invoke(() => { iteracja_textBlock.Text = iteracjaTotal.ToString(); });
+                    iteration_textBlock.Dispatcher.Invoke(() => { iteration_textBlock.Text = iteracjaTotal.ToString(); });
 
                     // *** opóźnienie ***
                     delay_checkBox.Dispatcher.Invoke(() =>
@@ -287,17 +281,17 @@ namespace TabuVRP002
                 {
                     iteracjeBezPoprawy = aspirationPlusPlus;
                     if (bestTracks.Count == 1)
-                        { if (debug) Console.Write(calcHamiltonTrackLengh(bestTracks[0]) + " != "); }
+                        { if (debug) Console.Write(CalcHamiltonTrackLengh(bestTracks[0]) + " != "); }
                     else if (bestTracks.Count != 0)
                         throw new Exception("Bardzo zle: " + bestTracks.Count);
                     bestOfBestCost = bestCost;
-                    najlepszyKoszt_textBlock.Dispatcher.Invoke(() => { najlepszyKoszt_textBlock.Text = bestOfBestCost.ToString("F3"); });
+                    bestCost_textBlock.Dispatcher.Invoke(() => { bestCost_textBlock.Text = bestOfBestCost.ToString("F3"); });
                     bestTracks = new List<List<Point>>();
                     bestTracks.Add(new List<Point>());
                     for (int i = 0; i < tracks[0].Count; i++)
                         bestTracks[0].Add(tracks[0][i]);
                     if (bestTracks.Count == 1)
-                        { if (debug) Console.WriteLine(calcHamiltonTrackLengh(bestTracks[0])); }
+                        { if (debug) Console.WriteLine(CalcHamiltonTrackLengh(bestTracks[0])); }
                 }
                 else
                 {
@@ -306,8 +300,8 @@ namespace TabuVRP002
             }
 
             // *** wyswietlenie najlepszego cyklu Hamiltona ***
-            DrawX.removeLines();
-            DrawX.drawLines(bestTracks);
+            DrawX.RemoveLines();
+            DrawX.DrawLines(bestTracks);
 
             // *** kwadrat na zielono ***
             result_Rectangle.Dispatcher.Invoke(() => { result_Rectangle.Fill = Brushes.LightGreen; });
@@ -334,7 +328,7 @@ namespace TabuVRP002
                             bufLadunekCzesc = -1;
                             jj++;
                         }
-                        else if (clientsOrders[bestTracks[0][jj].i] < bufCap)   //indeks poza EXCEPTION
+                        else if (clientsOrders[bestTracks[0][jj].i] < bufCap)
                         {
                             bufTracks[ii].Add(bestTracks[0][jj]);
                             bufCap -= clientsOrders[bestTracks[0][jj].i];
@@ -362,11 +356,11 @@ namespace TabuVRP002
                         break;
                     ii++;
                 }
+
                 // sprawdzenie kosztu bufTracks i jesli lepsze to przepisanie bufTracks do tracks
-                double buf = calcTracksLengh(bufTracks);
+                double buf = CalcTracksLengh(bufTracks);
                 if (bufBestCost > buf)
                 {
-                    //Console.WriteLine("********************");
                     bufBestCost = buf;
                     tracks = new List<List<Point>>();
                     for (int j = 0; j < bufTracks.Count; j++)
@@ -375,60 +369,47 @@ namespace TabuVRP002
                         for (int k = 0; k < bufTracks[j].Count; k++)
                         {
                             tracks[j].Add(bufTracks[j][k]);
-                            //Console.WriteLine(bufTracks[j][k].i);
                         }
                     }
-                    //Console.WriteLine(tracks.Count);
-                    //Console.WriteLine("********************");
                 }
             }
 
-            // tu sprawdzic czy masy się zgadzają (wyliczyc mase kazdej trasy i wyswietlac sprawdzanie)
             int buf001 = 0, buf002 = 0;
             for (int i = 0; i < clientsOrders.Length; i++)
             {
                 buf001 += clientsOrders[i];
             }
-            for (int i = 0; i < tracks.Count; i++)  // jest błąd - ten kawalek algorytmu dodaje 2 razy klientów, którzy są odwiedzani 2 razy
+            for (int i = 0; i < tracks.Count; i++)
             {
-                //Console.Write("i= " + i + ", j = ");
                 for (int j = 1; j < tracks[i].Count-1; j++)
                 {
-                    //Console.Write(j + ", ");
                     if (i > 0)
                     {
-                        //Console.WriteLine("XXX "+ tracks[i - 1][tracks[i - 1].Count - 2].i + " " + tracks[i][j].i + " XXX");
                         if (j == 1 && tracks[i - 1][tracks[i - 1].Count - 2].i != tracks[i][j].i)
                         {
                             buf002 += clientsOrders[tracks[i][j].i];
-                            //Console.WriteLine("test1");
                         }
                         else if (j > 1)
                         {
                             buf002 += clientsOrders[tracks[i][j].i];
-                            //Console.WriteLine("test2");
                         }
                     }
                     else
                     {
                         buf002 += clientsOrders[tracks[i][j].i];
-                        //Console.WriteLine("test3");
                     }
                 }
-                //Console.WriteLine();
             }
-            /*if (buf001 == buf002)
-                Console.WriteLine("Dobrze: " + buf001 + " = " + buf002);*/
             if (buf001 != buf002)
                 { if (debug) Console.WriteLine(" UWAGA BŁĄD: " + buf001 + " != " + buf002); }
 
             // *** wyswietlenie ostatecznego kosztu ***
-            finalCost = calcTracksLengh(tracks);
-            ostatecznyKoszt_textBlock.Dispatcher.Invoke(() => { ostatecznyKoszt_textBlock.Text = finalCost.ToString("F3"); });
+            finalCost = CalcTracksLengh(tracks);
+            finalCost_textBlock.Dispatcher.Invoke(() => { finalCost_textBlock.Text = finalCost.ToString("F3"); });
 
             // *** rysowanie ostateczne ***
-            DrawX.removeLines();
-            DrawX.drawLines(tracks);
+            DrawX.RemoveLines();
+            DrawX.DrawLines(tracks);
 
             // *** kwadrat na zielono ***
             result_Rectangle.Dispatcher.Invoke(() => { result_Rectangle.Fill = Brushes.Green; });
@@ -436,15 +417,15 @@ namespace TabuVRP002
             // *** Aktywacja wszystkich kontrolek ***
             mainGrid.Dispatcher.Invoke(() =>
             {
-                enableAllControls();
+                EnableAllControls();
                 start_Button.IsEnabled = true;
             });
         }
-        private void updateParams()
+        private void UpdateParams()
         {
             clientCount_textBox.Dispatcher.Invoke(() => { if (!Int32.TryParse(clientCount_textBox.Text, out clientsCount)) throw new Exception(); });
             avaMoves = ((clientsCount - 2) * (clientsCount - 3)) / 2;
-            DrawX.sendData(mainGrid, clientsCount);
+            DrawX.SendData(mainGrid, clientsCount);
             cadenceMod_textBox.Dispatcher.Invoke(() => { if (!Int32.TryParse(cadenceMod_textBox.Text, out cadenceMod)) throw new Exception(); });
             cadence = (int)(clientsCount * (cadenceMod / 100.0));
             percMaxTabu_textBox.Dispatcher.Invoke(() => { if (!Double.TryParse(percMaxTabu_textBox.Text, out percMaxTabu)) throw new Exception(); });
@@ -455,59 +436,59 @@ namespace TabuVRP002
             aspirationPlus_textBox.Dispatcher.Invoke(() => { if (!Int32.TryParse(aspirationPlus_textBox.Text, out aspirationPlus)) throw new Exception(); });
             aspirationPlusPlus_textBox.Dispatcher.Invoke(() => { if (!Int32.TryParse(aspirationPlusPlus_textBox.Text, out aspirationPlusPlus)) throw new Exception(); });
         }
-        private double lengthEuclid(Point a, Point b)
+        private double LengthEuclid(Point a, Point b)
         {
             return Math.Sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
         }
-        private double calcHamiltonTrackLengh(List<Point> graph)
+        private double CalcHamiltonTrackLengh(List<Point> graph)
         {
             double length = 0;
             for (int i = 1; i < graph.Count; i++)
             {
-                length += lengthEuclid(graph[i - 1], graph[i]);
+                length += LengthEuclid(graph[i - 1], graph[i]);
             }
             return length;
         }
-        private double calcTracksLengh(List<List<Point>> graph)
+        private double CalcTracksLengh(List<List<Point>> graph)
         {
             double length = 0;
             for (int i = 0; i < graph.Count; i++)
             {
-                length += calcHamiltonTrackLengh(graph[i]);
+                length += CalcHamiltonTrackLengh(graph[i]);
             }
             return length;
         }
-        private double calcHamiltonTrackNeighLengh(List<Point> graph, int index1, int index2)
+        private double CalcHamiltonTrackNeighLengh(List<Point> graph, int index1, int index2)
         {
             double length = 0;
             for (int i = 0; i < graph.Count-1; i++)
             {
                 if ((index1 == (index2 - 1)) && i == index1)
                 {
-                    length += lengthEuclid(graph[index2], graph[index1]);
+                    length += LengthEuclid(graph[index2], graph[index1]);
                 }
                 else if (i == index1 - 1)
                 {
-                    length += lengthEuclid(graph[i], graph[index2]);
+                    length += LengthEuclid(graph[i], graph[index2]);
                 }
                 else if (i == index1)
                 {
-                    length += lengthEuclid(graph[index2], graph[i + 1]);
+                    length += LengthEuclid(graph[index2], graph[i + 1]);
                 }
                 else if (i == index2 - 1)
                 {
-                    length += lengthEuclid(graph[i], graph[index1]);
+                    length += LengthEuclid(graph[i], graph[index1]);
                 }
                 else if (i == index2)
                 {
-                    length += lengthEuclid(graph[index1], graph[i + 1]);
+                    length += LengthEuclid(graph[index1], graph[i + 1]);
                 }
                 else
-                    length += lengthEuclid(graph[i], graph[i+1]);
+                    length += LengthEuclid(graph[i], graph[i+1]);
             }
             return length;
         }
-        private void disableAllControls()
+        private void DisableAllControls()
         {
             randomize_Button.IsEnabled = false;
             save_Button.IsEnabled = false;
@@ -523,12 +504,10 @@ namespace TabuVRP002
             aspirationPlusPlus_textBox.IsEnabled = false;
             delay_checkBox.IsEnabled = false;
         }
-        private void enableAllControls()
+        private void EnableAllControls()
         {
             randomize_Button.IsEnabled = true;
-            //save_Button.IsEnabled = true;
             load_Button.IsEnabled = true;
-            //start_Button.IsEnabled = true;
             clientCount_textBox.IsEnabled = true;
             min_textBox.IsEnabled = true;
             max_textBox.IsEnabled = true;
@@ -539,11 +518,12 @@ namespace TabuVRP002
             aspirationPlusPlus_textBox.IsEnabled = true;
             delay_checkBox.IsEnabled = true;
         }
-        private void randomize_Button_Click(object sender, RoutedEventArgs e)
+        private void Randomize_Button_Click(object sender, RoutedEventArgs e)
         {
             start_Button.IsEnabled = true;
             save_Button.IsEnabled = true;
-            updateParams();
+            UpdateParams();
+
             // *** losowanie pozycji klientów i rysowanie ich na mapie ***
             clients = new Point[clientsCount];
             clientsOrders = new int[clientsCount];
@@ -552,13 +532,13 @@ namespace TabuVRP002
                 clients[i] = new Point(rnd.Next(0, 1000), rnd.Next(0, 1000), i);
                 clientsOrders[i] = rnd.Next(minMass, maxMass + 1);
             }
-            DrawX.removeClients();
-            DrawX.removeLines();
-            DrawX.drawClients(clients);
+            DrawX.RemoveClients();
+            DrawX.RemoveLines();
+            DrawX.DrawClients(clients);
             start_Button.IsEnabled = true;
             save_Button.IsEnabled = true;
         }
-        private void save_Button_Click(object sender, RoutedEventArgs e)
+        private void Save_Button_Click(object sender, RoutedEventArgs e)
         {
             string exePath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             using (StreamWriter outputFile = new StreamWriter(System.IO.Path.Combine(exePath, "plik1.txt")))
@@ -571,7 +551,7 @@ namespace TabuVRP002
             }
             load_Button.IsEnabled = true;
         }
-        private void load_Button_Click(object sender, RoutedEventArgs e)
+        private void Load_Button_Click(object sender, RoutedEventArgs e)
         {
             start_Button.IsEnabled = true;
             save_Button.IsEnabled = true;
@@ -583,7 +563,7 @@ namespace TabuVRP002
                 if (!Int32.TryParse(valuesA[0], out clientsCount))
                     throw new Exception();
                 clientCount_textBox.Text = clientsCount.ToString();
-                DrawX.sendData(mainGrid, clientsCount);
+                DrawX.SendData(mainGrid, clientsCount);
                 if (!Int32.TryParse(valuesA[1], out minMass))
                     throw new Exception();
                 min_textBox.Text = minMass.ToString();
@@ -607,13 +587,13 @@ namespace TabuVRP002
                     i++;
                 }
             }
-            DrawX.removeClients();
-            DrawX.removeLines();
-            DrawX.drawClients(clients);
+            DrawX.RemoveClients();
+            DrawX.RemoveLines();
+            DrawX.DrawClients(clients);
             start_Button.IsEnabled = true;
             save_Button.IsEnabled = true;
         }
-        private void load_Button2_Click(object sender, RoutedEventArgs e)
+        private void Load_Button2_Click(object sender, RoutedEventArgs e)
         {
             start_Button.IsEnabled = true;
             save_Button.IsEnabled = true;
@@ -665,7 +645,7 @@ namespace TabuVRP002
                                     else if (ii == 3)
                                     {
                                         main_station = new Point(10 * xbuf, 10 * ybuf);
-                                        DrawX.drawMainStation(main_station);
+                                        DrawX.DrawMainStation(main_station);
                                         break;
                                     }
                                 }
@@ -700,7 +680,7 @@ namespace TabuVRP002
                     if (debug) Console.WriteLine(capacity + ", " + main_station.x + ", " + main_station.y);
                     if (debug) Console.WriteLine(i);
                     clientsCount = clientsBuf.Count;
-                    DrawX.sendData(mainGrid, clientsCount);
+                    DrawX.SendData(mainGrid, clientsCount);
                     clients = new Point[clientsCount];
                     clientsOrders = new int[clientsCount];
                     for (int j = 0; j < clientsCount; j++)
@@ -710,26 +690,26 @@ namespace TabuVRP002
                         clientsOrders[j] = clientsOrdersBuf[j];
                     }
                     clientCount_textBox.Dispatcher.Invoke(() => { clientCount_textBox.Text = clientsCount.ToString(); });
-                    DrawX.removeClients();
-                    DrawX.drawClients(clients);
+                    DrawX.RemoveClients();
+                    DrawX.DrawClients(clients);
                     start_Button.IsEnabled = true;
                 }
             }
         }
-        private void start_Button_Click(object sender, RoutedEventArgs e)
+        private void Start_Button_Click(object sender, RoutedEventArgs e)
         {
-            disableAllControls();
-            Thread thread = new Thread(start);
+            DisableAllControls();
+            Thread thread = new Thread(Start);
             thread.Start();
         }
 
-        private void startTest_Button_Click(object sender, RoutedEventArgs e)
+        private void StartTest_Button_Click(object sender, RoutedEventArgs e)
         {
-            disableAllControls();
-            Thread thread = new Thread(startTest);
+            DisableAllControls();
+            Thread thread = new Thread(StartTest);
             thread.Start();
         }
-        private void startTest()
+        private void StartTest()
         {
             string exePath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             using (StreamWriter outputFile = new StreamWriter(System.IO.Path.Combine(exePath, "Testy_parametrów.csv")))
@@ -740,7 +720,7 @@ namespace TabuVRP002
                 for (int j = 0; j < 3; j++)
                     for (int k = 0; k < 3; k++)
                         for (int l = 0; l < 3; l++)
-                        {//percMaxTabu_T,cadenceMod_T,aspirationPlus_T,aspirationPlusPlus_T
+                        {
                             //ustawianie kolejnego zestawu parametrów
                             percMaxTabu_textBox.Dispatcher.Invoke(() => { percMaxTabu_textBox.Text = percMaxTabu_T[i].ToString("F1"); });
                             cadenceMod_textBox.Dispatcher.Invoke(() => { cadenceMod_textBox.Text = cadenceMod_T[j].ToString(); });
@@ -748,7 +728,7 @@ namespace TabuVRP002
                             aspirationPlusPlus_textBox.Dispatcher.Invoke(() => { aspirationPlusPlus_textBox.Text = aspirationPlusPlus_T[l].ToString(); });
 
                             //start
-                            Thread thread = new Thread(start);
+                            Thread thread = new Thread(Start);
                             thread.Start();
 
                             //czekanie na zakończenie wątku
@@ -757,70 +737,68 @@ namespace TabuVRP002
                             //zapis wyników danego zestawu do pliku
                             int buf1 = -1;
                             double buf2 = -1, buf3 = -1;
-                            iteracja_textBlock.Dispatcher.Invoke(() => { if (!Int32.TryParse(iteracja_textBlock.Text, out buf1)) throw new Exception(); });
-                            najlepszyKoszt_textBlock.Dispatcher.Invoke(() => { if (!Double.TryParse(najlepszyKoszt_textBlock.Text, out buf2)) throw new Exception(); });
-                            ostatecznyKoszt_textBlock.Dispatcher.Invoke(() => { if (!Double.TryParse(ostatecznyKoszt_textBlock.Text, out buf3)) throw new Exception(); });
+                            iteration_textBlock.Dispatcher.Invoke(() => { if (!Int32.TryParse(iteration_textBlock.Text, out buf1)) throw new Exception(); });
+                            bestCost_textBlock.Dispatcher.Invoke(() => { if (!Double.TryParse(bestCost_textBlock.Text, out buf2)) throw new Exception(); });
+                            finalCost_textBlock.Dispatcher.Invoke(() => { if (!Double.TryParse(finalCost_textBlock.Text, out buf3)) throw new Exception(); });
                             using (StreamWriter outputFile = new StreamWriter(System.IO.Path.Combine(exePath, "Testy_parametrów.csv"), true))
                             {
                                 outputFile.WriteLine(percMaxTabu_T[i].ToString("F1") + ";" + cadenceMod_T[j] + ";" + aspirationPlus_T[k] + ";" + aspirationPlusPlus_T[l] + ";" + buf1 + ";" + buf2 + ";" + buf3);
                             }
                         }
         }
-        private void cyklHamiltonaButton_Click(object sender, RoutedEventArgs e)
+        private void HamiltonCycleButton_Click(object sender, RoutedEventArgs e)
         {
-            DrawX.removeLines();
-            DrawX.drawLines(bestTracks);
+            DrawX.RemoveLines();
+            DrawX.DrawLines(bestTracks);
         }
-        private void trasyButton_Click(object sender, RoutedEventArgs e)
+        private void TracksButton_Click(object sender, RoutedEventArgs e)
         {
-            DrawX.removeLines();
-            DrawX.drawLines(tracks);
+            DrawX.RemoveLines();
+            DrawX.DrawLines(tracks);
         }
-        private void enableButtons()
+        private void EnableButtons()
         {
-            //start_Button.IsEnabled = true;
             randomize_Button.IsEnabled = true;
-            //save_Button.IsEnabled = true;
         }
-        private void disenableButtons()
+        private void DisenableButtons()
         {
             start_Button.IsEnabled = false;
             randomize_Button.IsEnabled = false;
             save_Button.IsEnabled = false;
         }
-        private void clientCount_textBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void ClientCount_textBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            checkAllTextBoxes();
+            CheckAllTextBoxes();
         }
-        private void cadenceMod_textBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void CadenceMod_textBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            checkAllTextBoxes();
+            CheckAllTextBoxes();
         }
-        private void percMaxTabu_textBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void PercMaxTabu_textBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            checkAllTextBoxes();
+            CheckAllTextBoxes();
         }
-        private void cap_textBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void Cap_textBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            checkAllTextBoxes();
+            CheckAllTextBoxes();
         }
-        private void min_textBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void Min_textBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            checkAllTextBoxes();
+            CheckAllTextBoxes();
         }
-        private void max_textBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void Max_textBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            checkAllTextBoxes();
+            CheckAllTextBoxes();
         }
-        private void aspirationPlus_textBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void AspirationPlus_textBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            checkAllTextBoxes();
+            CheckAllTextBoxes();
         }
-        private void aspirationPlusPlus_textBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void AspirationPlusPlus_textBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            checkAllTextBoxes();
+            CheckAllTextBoxes();
         }
-        private void checkAllTextBoxes()
+        private void CheckAllTextBoxes()
         {
             if (windowInited)
             {
@@ -916,9 +894,9 @@ namespace TabuVRP002
                 }
 
                 if (buf == true)    //jesli nie ma błędu we wprowadzonych parametrach
-                    enableButtons();
+                    EnableButtons();
                 else    //jesli jest błąd we wprowadzonych parametrach
-                    disenableButtons();
+                    DisenableButtons();
             }
         }
     }
