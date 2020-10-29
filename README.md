@@ -9,10 +9,10 @@ WPF Application
 
 # Algorithm description
 
-move - moving from one solution to another one - in my algoryhm it is defined as swaping places of 2 points (clients) in Hamilton cycle. For example: 1,2,3,4,5,6,1  ->  1,5,3,4,2,6,1.
-neighborhood - all solutions which can be obtained by 1 move from the current solution.
-Hamilton cycle - it is cycle where each vertex of graph is visited exactly 1 time.
-solution - in my algorythm it is current Hamilton cycle.
+**move** - moving from one solution to another one - in my algoryhm it is defined as swaping places of 2 points (clients) in Hamilton cycle. For example: 1,2,3,4,5,6,1  ->  1,5,3,4,2,6,1.
+**neighborhood** - all solutions which can be obtained by 1 move from the current solution.
+**Hamilton cycle** - it is cycle where each vertex of graph is visited exactly 1 time.
+**solution** - in my algorythm it is current Hamilton cycle.
 best solution - the best Hamilton cycle.
 
 1. Entering parameters.
