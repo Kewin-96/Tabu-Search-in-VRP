@@ -1,4 +1,4 @@
-# Tabu-Search-in-VRP
+# Tabu Search in VRP
 Algorythm of Tabu Search in Vehicle Routing Problem (VRP).  <br />
 
 **Visual Studio Community 2019** <br />
