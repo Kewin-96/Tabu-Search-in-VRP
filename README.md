@@ -24,5 +24,5 @@ best solution - the best Hamilton cycle.  <br />
 	5.2. Adding new forbidden move to Tabu list.
 6. Cutting best Hamilton cycle.
 
-# Algorythm presentation
+# Algorithm presentation
 https://youtu.be/kBAVmgAukBI 
