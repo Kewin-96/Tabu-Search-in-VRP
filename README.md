@@ -23,3 +23,6 @@ best solution - the best Hamilton cycle.  <br />
 	- if algorythm can't find new better solution it starts searching from new random Hamilton cycle.
 	5.2. Adding new forbidden move to Tabu list.
 6. Cutting best Hamilton cycle.
+
+# Algorythm presentation
+https://youtu.be/kBAVmgAukBI 
