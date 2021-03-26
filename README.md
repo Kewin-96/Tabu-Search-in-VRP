@@ -25,4 +25,6 @@ best solution - the best Hamilton cycle.  <br />
 6. Cutting best Hamilton cycle.
 
 # Algorithm presentation
-https://youtu.be/kBAVmgAukBI 
+https://youtu.be/kBAVmgAukBI
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/kBAVmgAukBI/0.jpg)](https://www.youtube.com/watch?v=kBAVmgAukBI)
